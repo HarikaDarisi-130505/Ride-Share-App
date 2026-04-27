@@ -80,8 +80,8 @@ def login(request: schemas.LoginRequest, db: Session = Depends(database.get_db))
             db.add(otp_entry)
             db.commit()
 
-            email_service.send_otp_email(email, otp, type="login_2fa")
             log_otp(email, otp, expires_at, "LOGIN_2FA")
+            email_service.send_otp_email(email, otp, type="login_2fa")
 
             return {
                 "message": "OTP sent to your email",
@@ -247,12 +247,11 @@ def register(request: schemas.RegisterRequest, db: Session = Depends(database.ge
         db.add(otp_entry)
         db.commit()
         
-        # Send real email (if SMTP configured) or mock
-        email_service.send_otp_email(email, otp)
         log_otp(email, otp, expires_at, "REGISTER")
+        email_service.send_otp_email(email, otp)
         
         return {
-            "message": "User registered successfully. Please verify your phone number.",
+            "message": "User registered successfully. Please verify your email.",
             "requires_verification": True,
             "email": request.email
         }
@@ -435,9 +434,8 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     db.add(otp_entry)
     db.commit()
     
-    # Send actual email
-    email_service.send_otp_email(email, otp, type="password_reset")
     log_otp(email, otp, expires_at, "PASSWORD_RESET")
+    email_service.send_otp_email(email, otp, type="password_reset")
         
     return {"message": "OTP sent to your email for password reset"}
 

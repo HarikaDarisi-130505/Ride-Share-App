@@ -1,7 +1,8 @@
 import requests
 import time
+import os
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("TEST_API_BASE_URL", "https://ride-share-app-production-ab31.up.railway.app").rstrip("/")
 
 def test_api():
     print("Starting API tests...")
