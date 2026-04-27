@@ -1,23 +1,11 @@
 import smtplib
 import threading
-import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from urllib import error as urllib_error
-from urllib import request as urllib_request
 
-from ..config import (
-    EMAIL_PROVIDER,
-    RESEND_API_KEY,
-    SENDER_EMAIL,
-    SMTP_PASSWORD,
-    SMTP_PORT,
-    SMTP_SERVER,
-    SMTP_USER,
-)
+from ..config import SENDER_EMAIL, SMTP_PASSWORD, SMTP_PORT, SMTP_SERVER, SMTP_USER
 
 SMTP_TIMEOUT_SECONDS = 4
-RESEND_API_URL = "https://api.resend.com/emails"
 
 
 def _build_otp_message(receiver_email, otp, otp_type="verification"):
@@ -55,54 +43,7 @@ def _normalized_smtp_password():
     return (SMTP_PASSWORD or "").replace(" ", "")
 
 
-def _send_via_resend(receiver_email, otp, otp_type="verification"):
-    if not RESEND_API_KEY or not SENDER_EMAIL:
-        return False
-
-    msg = _build_otp_message(receiver_email, otp, otp_type=otp_type)
-    payload = json.dumps(
-        {
-            "from": SENDER_EMAIL,
-            "to": [receiver_email],
-            "subject": msg["Subject"],
-            "text": msg.get_payload()[0].get_payload(),
-        }
-    ).encode("utf-8")
-
-    req = urllib_request.Request(
-        RESEND_API_URL,
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-
-    try:
-        with urllib_request.urlopen(req, timeout=SMTP_TIMEOUT_SECONDS) as response:
-            status_code = getattr(response, "status", 200)
-            if 200 <= status_code < 300:
-                print(f"Successfully sent email to {receiver_email} via Resend")
-                return True
-            print(f"Resend returned unexpected status {status_code}")
-            return False
-    except urllib_error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace")
-        print(f"Resend HTTP error: {e.code} {body}")
-        return False
-    except Exception as e:
-        print(f"Resend delivery error: {e}")
-        return False
-
-
 def _deliver_otp_email(receiver_email, otp, otp_type="verification"):
-    if EMAIL_PROVIDER in ("auto", "resend") and RESEND_API_KEY:
-        if _send_via_resend(receiver_email, otp, otp_type=otp_type):
-            return True
-        if EMAIL_PROVIDER == "resend":
-            return False
-
     if not SMTP_USER or not SMTP_PASSWORD:
         print(f"\n[MOCK EMAIL] To {receiver_email}: {otp} (No email provider configured)")
         return False
@@ -123,7 +64,7 @@ def _deliver_otp_email(receiver_email, otp, otp_type="verification"):
 
 def send_otp_email(receiver_email, otp, type="verification", async_mode=True):
     """
-    Sends an OTP email using Resend when configured, otherwise SMTP.
+    Sends an OTP email using SMTP.
     Returns immediately by default so auth responses do not block on SMTP.
     """
     if async_mode:
