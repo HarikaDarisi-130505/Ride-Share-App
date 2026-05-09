@@ -154,23 +154,26 @@ Each ride creates a dedicated communication room:
 ```
 
 ---
-
 # Deployment
 
 ## Backend
+- FastAPI backend deployed on Railway
+- MySQL database connected using DATABASE_URL
+- Supports REST APIs and WebSocket communication
 
-* Hosted on Railway
-* MySQL configured using DATABASE_URL
-* Supports HTTPS APIs and WebSocket endpoints
+## Mobile App
+- Expo React Native Android application
+- Built using Expo EAS
 
-## Android App
+## Environment Variables
+The backend requires:
+- DATABASE_URL
+- SECRET_KEY
+- SMTP credentials
+- PUBLIC_API_BASE_URL
 
-* Built using Expo EAS
-* Managed Expo workflow
-* Google Maps API integration
 
----
-
+Download ApK : https://drive.google.com/file/d/13seS5E1XvesyhUc81sSmCNvacBAUkjV2/view?usp=sharing
 # Future Improvements
 
 * JWT-secured WebSocket authentication
